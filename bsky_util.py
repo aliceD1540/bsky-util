@@ -1,9 +1,29 @@
 import os
+import re
+import requests
 from atproto import Client, models, exceptions, client_utils
 from atproto_client.namespaces.sync_ns import ChatBskyConvoNamespace
 
 # セッション保持ファイル
 BSKY_SESSION_FILE = "bsky_session.json"
+
+
+def message_to_textbuilder(message: str) -> client_utils.TextBuilder:
+    """テキストに含まれるタグ情報を分離、タグとして設定する"""
+    hashtags = re.findall(r"#\w+", message)
+    clean_message = re.sub(r"#\w+", "", message).strip()
+
+    text_builder = client_utils.TextBuilder().text(clean_message)
+    for hashtag in hashtags:
+        text_builder.text(" ").tag(hashtag, hashtag.lstrip("#"))
+    return text_builder
+
+
+def get_image_bytes(img_url: str) -> bytes:
+    """画像URLから画像データを取得"""
+    resp = requests.get(img_url)
+    resp.raise_for_status()
+    return resp.content
 
 
 class BlueskyUtil:
@@ -40,6 +60,7 @@ class BlueskyUtil:
 
     def post_external(self, message: str, card: dict, img: bytes):
         """カード付きポスト"""
+        message = self.__message_to_textbuilder(message)
         if img:
             upload = self.client.upload_blob(img)
             external = models.AppBskyEmbedExternal.External(
@@ -53,10 +74,15 @@ class BlueskyUtil:
 
         return self.client.send_post(message, embed=embed)
 
-    def post_text(self, text: str):
+    def post_text(self, message: str):
         """テキストのみのポスト"""
-        self.client.post(text)
+        message = message_to_textbuilder(message)
+        self.client.post(message)
 
-    def post_image(self, text: str | client_utils.TextBuilder, images: list):
+    def post_images(self, message: str, image_urls: list):
         """画像付きポスト"""
-        self.client.send_images(text=text, images=images)
+        message = message_to_textbuilder(message)
+        images = []
+        for image_url in image_urls:
+            images.append(get_image_bytes(image_url))
+        self.client.send_images(text=message, images=images)
