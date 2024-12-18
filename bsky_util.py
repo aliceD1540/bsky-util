@@ -60,7 +60,7 @@ class BlueskyUtil:
 
     def post_external(self, message: str, card: dict, img: bytes):
         """カード付きポスト"""
-        message = self.__message_to_textbuilder(message)
+        message = message_to_textbuilder(message)
         if img:
             upload = self.client.upload_blob(img)
             external = models.AppBskyEmbedExternal.External(
