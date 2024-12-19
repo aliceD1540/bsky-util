@@ -49,6 +49,10 @@ class BlueskyUtil:
             print("failed. create session...")
             return self.create_session()
 
+    def get_session_str(self) -> str:
+        """セッション情報の取得"""
+        return self.client.export_session_string()
+
     def create_session(self):
         """セッションの作成"""
         self.client = Client()
@@ -56,6 +60,24 @@ class BlueskyUtil:
             login=os.getenv("BSKY_USER_NAME"), password=os.getenv("BSKY_APP_PASS")
         )
         self.save_session()
+        return login
+
+    def load_guest_session(self, session_str: str):
+        """セッション情報のロード（ゲスト用）"""
+        try:
+            print("try relogin.")
+            # with open(BSKY_SESSION_FILE, "r") as file:
+            #     session_str = file.read()
+            return self.client.login(session_string=session_str)
+        except (FileNotFoundError, ValueError, exceptions.BadRequestError):
+            # ファイルが存在しなかったりトークンが取得できない場合はセッション作成
+            print("failed. create session...")
+            return self.create_session()
+
+    def create_guest_session(self, bsky_user: str, bsky_pass: str):
+        """セッションの作成（ゲスト用）"""
+        self.client = Client()
+        login = self.client.login(login=bsky_user, password=bsky_pass)
         return login
 
     def post_external(self, message: str, card: dict, img: bytes):
