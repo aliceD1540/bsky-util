@@ -9,13 +9,32 @@ BSKY_SESSION_FILE = "bsky_session.json"
 
 
 def message_to_textbuilder(message: str) -> client_utils.TextBuilder:
-    """テキストに含まれるタグ情報を分離、タグとして設定する"""
+    """テキストに含まれるタグやURLを分離、設定する"""
+    # タグ取得
     hashtags = re.findall(r"#\w+", message)
     clean_message = re.sub(r"#\w+", "", message).strip()
 
+    # リンクURLを文字列として取得
+    urls = re.findall(r"https?://[\w/:%#\$&\?\(\)~\.=\+\-]+", clean_message)
+    clean_message = re.sub(
+        r"https?://[\w/:%#\$&\?\(\)~\.=\+\-]+", "", clean_message
+    ).strip()
+
     text_builder = client_utils.TextBuilder().text(clean_message)
+    # タグ設定
     for hashtag in hashtags:
         text_builder.text(" ").tag(hashtag, hashtag.lstrip("#"))
+
+    # リンク設定
+    for url in urls:
+        text_builder.text(" ").link(text=url, url=url)
+
+    # 宣伝用にサービスURLを追加
+    footer_text = os.getenv("FOOTER_TEXT")
+    footer_url = os.getenv("FOOTER_URL")
+    if footer_url:
+        text_builder.text("\n").link(text=footer_text, url=footer_url)
+
     return text_builder
 
 
