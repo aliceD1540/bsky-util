@@ -63,7 +63,7 @@ class BlueskyUtil:
             with open(BSKY_SESSION_FILE, "r") as file:
                 session_str = file.read()
             return self.client.login(session_string=session_str)
-        except:
+        except (FileNotFoundError, ValueError, exceptions.BadRequestError):
             # ファイルが存在しなかったりトークンが取得できない場合はセッション作成
             print("failed. create session...")
             return self.create_session()
