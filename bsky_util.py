@@ -88,10 +88,10 @@ class BlueskyUtil:
             # with open(BSKY_SESSION_FILE, "r") as file:
             #     session_str = file.read()
             return self.client.login(session_string=session_str)
-        except (FileNotFoundError, ValueError, exceptions.BadRequestError):
-            # ファイルが存在しなかったりトークンが取得できない場合はセッション作成
+        except (FileNotFoundError, ValueError, exceptions.BadRequestError) as e:
+            # ファイルが存在しなかったりトークンが取得できない場合はそのまま例外を返す
             print("failed. create session...")
-            return self.create_session()
+            return e
 
     def create_guest_session(self, bsky_user: str, bsky_pass: str):
         """セッションの作成（ゲスト用）"""
