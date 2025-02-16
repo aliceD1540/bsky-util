@@ -64,7 +64,7 @@ class BlueskyUtil:
                 session_str = file.read()
             return self.client.login(session_string=session_str)
         except (FileNotFoundError, ValueError, exceptions.BadRequestError):
-            # ファイルが存在しなかったりトークンが取得できない場合はセッション作成
+            # 既存セッションでログインに失敗した場合は新規セッション作成
             print("failed. create session...")
             return self.create_session()
 
@@ -85,13 +85,11 @@ class BlueskyUtil:
         """セッション情報のロード（ゲスト用）"""
         try:
             print("try relogin.")
-            # with open(BSKY_SESSION_FILE, "r") as file:
-            #     session_str = file.read()
             return self.client.login(session_string=session_str)
-        except (FileNotFoundError, ValueError, exceptions.BadRequestError) as e:
-            # ファイルが存在しなかったりトークンが取得できない場合はそのまま例外を返す
+        except (ValueError, exceptions.BadRequestError) as e:
+            # 既存セッションでログインに失敗した場合は新規セッション作成
             print("failed. create session...")
-            return e
+            return self.create_guest_session()
 
     def create_guest_session(self, bsky_user: str, bsky_pass: str):
         """セッションの作成（ゲスト用）"""
