@@ -63,6 +63,10 @@ class BlueskyUtil:
             with open(BSKY_SESSION_FILE, "r") as file:
                 session_str = file.read()
             return self.client.login(session_string=session_str)
+        except exceptions.InvokeTimeoutError:
+            # タイムアウトした場合は処理を終了、次回実行に任せる
+            print("login timeout.")
+            return None
         except (FileNotFoundError, ValueError, exceptions.BadRequestError):
             # 既存セッションでログインに失敗した場合は新規セッション作成
             print("failed. create session...")
