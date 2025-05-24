@@ -124,4 +124,4 @@ class BlueskyUtil:
         images = []
         for image_url in image_urls:
             images.append(get_image_bytes(image_url))
-        self.client.send_images(text=message, images=images)
+        self.client.send_images(text=message, images=images, langs=["ja"])
