@@ -3,6 +3,7 @@ import re
 import requests
 from atproto import Client, models, exceptions, client_utils
 from atproto_client.namespaces.sync_ns import ChatBskyConvoNamespace
+from atproto_client.exceptions import InvokeTimeoutError
 
 # セッション保持ファイル
 BSKY_SESSION_FILE = "bsky_session.json"
@@ -63,6 +64,10 @@ class BlueskyUtil:
             with open(BSKY_SESSION_FILE, "r") as file:
                 session_str = file.read()
             return self.client.login(session_string=session_str)
+        except InvokeTimeoutError:
+            # タイムアウトした場合は処理を終了、次回実行に任せる
+            print("login timeout.")
+            return None
         except (FileNotFoundError, ValueError, exceptions.BadRequestError):
             # 既存セッションでログインに失敗した場合は新規セッション作成
             print("failed. create session...")
@@ -74,12 +79,15 @@ class BlueskyUtil:
 
     def create_session(self):
         """セッションの作成"""
-        self.client = Client()
-        login = self.client.login(
-            login=os.getenv("BSKY_USER_NAME"), password=os.getenv("BSKY_APP_PASS")
-        )
-        self.save_session()
-        return login
+        try:
+            self.client = Client()
+            login = self.client.login(
+                login=os.getenv("BSKY_USER_NAME"), password=os.getenv("BSKY_APP_PASS")
+            )
+            self.save_session()
+            return login
+        except InvokeTimeoutError:
+            return None
 
     def load_guest_session(self, session_str: str):
         """セッション情報のロード（ゲスト用）"""
