@@ -133,3 +133,28 @@ class BlueskyUtil:
         for image_url in image_urls:
             images.append(get_image_bytes(image_url))
         self.client.send_images(text=message, images=images, langs=["ja"])
+
+    def post_reply(self, message: str, uri: str, cid: str):
+        """リプライポスト"""
+        message = message_to_textbuilder(message)
+        model = models.base.ModelBase(uri=uri, cid=cid)
+        parent = models.utils.create_strong_ref(model)
+        reply_ref=models.AppBskyFeedPost.ReplyRef(parent=parent, root=parent)
+        self.client.post(
+            text=message,
+            reply_to=reply_ref,
+        )
+
+    def search_posts(self, query: str, limit: int = 20, did: str = None, since: str = None, until: str = None):
+        """ポストの検索"""
+        return self.client.app.bsky.feed.search_posts(
+            params={
+                k: v for k, v in {
+                    "q": query,
+                    "limit": limit,
+                    "author": did,
+                    "since": since,
+                    "until": until
+                }.items() if v is not None
+            }
+        )
